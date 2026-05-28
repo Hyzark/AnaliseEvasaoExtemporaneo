@@ -1,7 +1,12 @@
 .venv/
+<<<<<<< HEAD
 __pycache__/
 hooks/__pycache__/
 build/
 dist/
 *.spec
+=======
+venv/
+__pycache__/
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
 *.pyc

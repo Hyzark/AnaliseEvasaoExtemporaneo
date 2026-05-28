@@ -20,6 +20,11 @@ from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 import appextemporaneo # Importa o módulo inteiro
 from appextemporaneo import renderizar_validacao_extemporaneo
+<<<<<<< HEAD
+=======
+
+importlib.reload(appextemporaneo)
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
 # ═══════════════════════════════════════════════════════════════════
 # CONFIGURAÇÕES DE NEGÓCIO  (não alterar sem alinhamento com o DER)
 # ═══════════════════════════════════════════════════════════════════
@@ -132,7 +137,11 @@ def ler_tamoios(path_original) -> pd.DataFrame:
     # Data vem como string "dd/mm/yyyy hh:mm:ss"
     df.columns = df.columns.str.strip()
 
+<<<<<<< HEAD
     col_data  = get_col(df, "Data", "Data da Passagem", "Data Passagem", "Data e Hora da Passagem")
+=======
+    col_data  = get_col(df, "Data", "Data da Passagem", "Data Passagem")
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
     col_hora  = get_col(df, "Hora")
     col_placa = get_col(df, "Placa")
     col_valor = get_col(df, "Valor")
@@ -167,6 +176,7 @@ def ler_der(path_original) -> pd.DataFrame:
     df = pd.read_excel(path_original, sheet_name=0)
     df.columns = df.columns.str.strip()
 
+<<<<<<< HEAD
     # ─────────────────────────────────────────────
     # BUSCA FLEXÍVEL DA COLUNA "DATA"
     # ─────────────────────────────────────────────
@@ -182,17 +192,29 @@ def ler_der(path_original) -> pd.DataFrame:
         df[col_data], dayfirst=True, errors="coerce"
     )
     
+=======
+    df["Data Passagem"] = pd.to_datetime(
+        df["Data Passagem"], dayfirst=True, errors="coerce"
+    )
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
     df["Placa7"] = df["Veículo"].astype(str).str.strip().str.upper().str[:7]
 
     # Chave de cruzamento: dd/mm/aa hh:mm:ss placa
     df["DADOS PASSAGENS DER"] = (
+<<<<<<< HEAD
         df["Data"].dt.strftime("%d/%m/%y")
         + " "
         + df["Data"].dt.strftime("%H:%M:%S")
+=======
+        df["Data Passagem"].dt.strftime("%d/%m/%y")
+        + " "
+        + df["Data Passagem"].dt.strftime("%H:%M:%S")
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
         + " "
         + df["Placa7"]
     )
 
+<<<<<<< HEAD
     # ─────────────────────────────────────────────
     # PADRONIZAÇÃO DAS COLUNAS
     # ─────────────────────────────────────────────
@@ -269,6 +291,21 @@ def ler_der(path_original) -> pd.DataFrame:
     # ─────────────────────────────────────────────
     df["Motivo Invalidação"] = df[cols_motivo[0]]
     
+=======
+    # Quando o Excel contém duas colunas com o mesmo nome, pandas as renomeia
+    # automaticamente para "Motivo Invalidação" e "Motivo Invalidação.1".
+    # A segunda ocorrência (índice 1) é a coluna efetiva usada para detecção de fraude.
+    col_motivo_principal = "Motivo Invalidação"
+
+    col_motivo_fraude = next(
+        (c for c in df.columns if "Motivo Invalidação" in c and c != col_motivo_principal),
+        col_motivo_principal
+)
+
+    df["Motivo Invalidação"]          = df[col_motivo_principal].astype(str).str.strip()
+    df["Motivo Invalidação Fraude"]   = df[col_motivo_fraude].astype(str).str.strip()
+    df["Situação / Fase Análise"]     = df["Situação / Fase Análise"].astype(str).str.strip()
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
     return df
 
 
@@ -287,6 +324,7 @@ def cruzar_dados(df_der: pd.DataFrame, df_tam: pd.DataFrame) -> pd.DataFrame:
 
     df_der["Valor Encontrado"] = df_der["DADOS PASSAGENS DER"].map(mapa_valor)
 
+<<<<<<< HEAD
     # ── NOVA LÓGICA: último status encontrado na linha vence ─────
     def linha_valida(row):
         ultimo_status = None
@@ -318,12 +356,27 @@ def cruzar_dados(df_der: pd.DataFrame, df_tam: pd.DataFrame) -> pd.DataFrame:
     df_der["_valido"] = df_der.apply(linha_valida, axis=1)
 
     # ── Valor Válido ─────────────────────────────────────────────
+=======
+    # ── NOVA LÓGICA: procurar "válido" na linha inteira ───────────
+    def linha_valida(row):
+        for v in row:
+            texto = str(v).strip().lower()
+
+            if "válido" in texto and "inválido" not in texto:
+                return True
+        return False
+
+    df_der["_valido"] = df_der.apply(linha_valida, axis=1)
+
+    # ── Valor Válido ──────────────────────────────────────────────
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
     df_der["Valor Válido"] = np.where(
         df_der["_valido"],
         df_der["Valor Encontrado"].fillna(0),
         0,
     )
 
+<<<<<<< HEAD
     # ── FLAG FRAUDE ──────────────────────────────────────────────
     df_der["_fraude"] = (
         df_der["Motivo Invalidação Fraude"]
@@ -331,6 +384,11 @@ def cruzar_dados(df_der: pd.DataFrame, df_tam: pd.DataFrame) -> pd.DataFrame:
     )
 
     # ── Valor Fraude ─────────────────────────────────────────────
+=======
+    # ── Fraude (mantido) ─────────────────────────────────────────
+    df_der["_fraude"] = df_der["Motivo Invalidação Fraude"].isin(MOTIVOS_FRAUDE)
+
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
     df_der["Valor Fraude"] = np.where(
         (~df_der["_valido"]) & df_der["_fraude"],
         df_der["Valor Encontrado"].fillna(0),
@@ -364,7 +422,11 @@ def gerar_inconsistencias(df_der: pd.DataFrame, df_tam: pd.DataFrame) -> pd.Data
 
     df_inc["Justificativa"] = df_inc.apply(justificativa, axis=1)
     cols = [
+<<<<<<< HEAD
         "DADOS PASSAGENS DER", "Data", "Veículo",
+=======
+        "DADOS PASSAGENS DER", "Data Passagem", "Veículo",
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
         "Situação / Fase Análise", "Motivo Invalidação",
         "Valor Encontrado", "Valor Válido", "Valor Fraude", "Justificativa",
     ]
@@ -459,6 +521,7 @@ def detectar_erros_concessao(df_tam: pd.DataFrame) -> pd.DataFrame:
 
     return result
 
+<<<<<<< HEAD
 def detectar_passagens_proximas(df_tam: pd.DataFrame) -> pd.DataFrame:
     """
     Detecta passagens da mesma placa com intervalo menor ou igual a 60 segundos.
@@ -506,6 +569,8 @@ def detectar_passagens_proximas(df_tam: pd.DataFrame) -> pd.DataFrame:
     
     return result.reset_index(drop=True)
 
+=======
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
 def detectar_erros_der(df_der: pd.DataFrame) -> pd.DataFrame:
     if df_der.empty:
         return pd.DataFrame()
@@ -522,7 +587,11 @@ def detectar_erros_der(df_der: pd.DataFrame) -> pd.DataFrame:
         .groupby("DADOS PASSAGENS DER")
         .agg({
             "Veículo": "first",
+<<<<<<< HEAD
             "Data": "first",
+=======
+            "Data Passagem": "first",
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
             "DADOS PASSAGENS DER": "count"
         })
         .rename(columns={"DADOS PASSAGENS DER": "Quantidade"})
@@ -541,7 +610,11 @@ def detectar_erros_der(df_der: pd.DataFrame) -> pd.DataFrame:
     )
 
     duplicados = duplicados[
+<<<<<<< HEAD
         ["DADOS PASSAGENS DER", "Veículo", "Data", "Tipo Erro"]
+=======
+        ["DADOS PASSAGENS DER", "Veículo", "Data Passagem", "Tipo Erro"]
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
     ]
 
     duplicados.columns = ["Chave Passagem", "Placa", "Data", "Tipo Erro"]
@@ -554,7 +627,11 @@ def detectar_divergencias(df_der: pd.DataFrame, df_tam: pd.DataFrame) -> pd.Data
     tam_set = set(df_tam["DADOS PASSAGENS CONCESSAO"])
 
     so_der = df_der[~df_der["DADOS PASSAGENS DER"].isin(tam_set)][
+<<<<<<< HEAD
         ["DADOS PASSAGENS DER", "Data", "Veículo",
+=======
+        ["DADOS PASSAGENS DER", "Data Passagem", "Veículo",
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
          "Situação / Fase Análise", "Motivo Invalidação"]
     ].copy()
     so_der.columns = ["Chave Passagem", "Data/Hora", "Placa/Veículo", "Situação", "Motivo"]
@@ -604,12 +681,23 @@ def consolidacao(df_der: pd.DataFrame) -> pd.DataFrame:
 # ═══════════════════════════════════════════════════════════════════
 
 def escrever_resultado_otimizado(
+<<<<<<< HEAD
     df_der, df_tam, df_inc, df_erros, df_div, df_cons, df_erros_der=None, df_proximas=None
+=======
+    df_der,
+    df_tam,
+    df_inc,
+    df_erros,
+    df_div,
+    df_cons,
+    df_erros_der=None,
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
 ):
     import io
     buffer = io.BytesIO()
 
     with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
+<<<<<<< HEAD
         df_der.to_excel(writer, sheet_name="DER Processado", index=False)
         df_tam.to_excel(writer, sheet_name="Concessionária", index=False)
         df_inc.to_excel(writer, sheet_name="Inconsistências", index=False)
@@ -624,6 +712,29 @@ def escrever_resultado_otimizado(
         # 🔥 NOVA ABA INSERIDA AQUI
         if df_proximas is not None:
             df_proximas.to_excel(writer, sheet_name="Passagens Próximas", index=False)
+=======
+        # ── Aba DER ─────────────────────────────
+        df_der.to_excel(writer, sheet_name="DER Processado", index=False)
+
+        # ── Aba Concessionária ─────────────────
+        df_tam.to_excel(writer, sheet_name="Concessionária", index=False)
+
+        # ── Inconsistências ────────────────────
+        df_inc.to_excel(writer, sheet_name="Inconsistências", index=False)
+
+        # ── Erros Concessionária ───────────────
+        df_erros.to_excel(writer, sheet_name="Erros Concessionária", index=False)
+
+        # ── Erros DER ──────────────────────────
+        if df_erros_der is not None and not df_erros_der.empty:
+            df_erros_der.to_excel(writer, sheet_name="Erros DER", index=False)
+
+        # ── Divergências ───────────────────────
+        df_div.to_excel(writer, sheet_name="Divergências", index=False)
+
+        # ── Consolidação ───────────────────────
+        df_cons.to_excel(writer, sheet_name="Resultado", index=False)
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
 
     buffer.seek(0)
     return buffer
@@ -715,6 +826,7 @@ def renderizar_aba_analise():
         progress.progress(55, text="🔍 Detectando duplicatas no DER…")
         df_erros_der = detectar_erros_der(df_der)
 
+<<<<<<< HEAD
         # ── DUPLICIDADES FINANCEIRAS (válidos com valor) ─────────────
         duplicados_validos = df_der[
             (
@@ -730,6 +842,9 @@ def renderizar_aba_analise():
             )
         ].copy()
 
+=======
+        # 🔥 NOVO: BASE FINANCEIRA SEM DUPLICIDADE
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
         df_der_unico = df_der.drop_duplicates("DADOS PASSAGENS DER", keep="first")
 
         # 4. Relatórios
@@ -739,9 +854,12 @@ def renderizar_aba_analise():
         progress.progress(75, text="🔍 Detectando erros da Concessionária…")
         df_erros = detectar_erros_concessao(df_tam)
 
+<<<<<<< HEAD
         progress.progress(78, text="🔍 Procurando passagens próximas (<= 60s)…")
         df_proximas = detectar_passagens_proximas(df_tam)
 
+=======
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
         progress.progress(82, text="🔍 Identificando divergências…")
         df_div  = detectar_divergencias(df_der_unico, df_tam)
 
@@ -751,9 +869,19 @@ def renderizar_aba_analise():
         # 5. Geração do Excel
         progress.progress(90, text="💾 Gerando planilha de saída…")
         buffer_saida = escrever_resultado_otimizado(
+<<<<<<< HEAD
             df_der, df_tam, df_inc, df_erros, df_div, df_cons,
             df_erros_der=df_erros_der,
             df_proximas=df_proximas,
+=======
+            df_der,
+            df_tam,
+            df_inc,
+            df_erros,
+            df_div,
+            df_cons,
+            df_erros_der=df_erros_der,
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
         )
 
         progress.progress(100, text="✅ Concluído!")
@@ -805,6 +933,7 @@ def renderizar_aba_analise():
     col10.metric("Divergências — só no DER",                   f"{so_der_n:,}")
     col11.metric("Divergências — só na Concessionária",        f"{so_tam_n:,}")
 
+<<<<<<< HEAD
     duplicados_financeiros = (
         duplicados_validos
         .groupby("DADOS PASSAGENS DER", as_index=False)
@@ -848,13 +977,24 @@ def renderizar_aba_analise():
     qtd_proximas = len(df_proximas) if "Placa" in df_proximas.columns else 0
 
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+=======
+    # ── Prévia das tabelas ────────────────────────────────────────────────────
+    st.markdown('<div class="section-title">🔎 Prévia dos Dados</div>', unsafe_allow_html=True)
+
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
         f"Inconsistências ({len(df_inc):,})",
         f"Erros Concessionária ({len(df_erros):,})",
         f"Erros DER ({len(df_erros_der):,})",
         f"Divergências ({len(df_div):,})",
         "Consolidação",
+<<<<<<< HEAD
         f"Auditoria: Próximas ({qtd_proximas})",
     ])
+=======
+    ])
+
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
     MAX_PREVIEW = 500
 
     with tab1:
@@ -879,10 +1019,13 @@ def renderizar_aba_analise():
     with tab5:
         st.dataframe(df_cons, use_container_width=True, hide_index=True)
 
+<<<<<<< HEAD
     # Adicione a renderização da tab6 lá embaixo, junto das outras:
     with tab6:
         st.dataframe(df_proximas.head(MAX_PREVIEW), use_container_width=True, hide_index=True)
 
+=======
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
     # ── Download ──────────────────────────────────────────────────────────────
     st.markdown('<div class="section-title">⬇️ Download do Resultado</div>', unsafe_allow_html=True)
 

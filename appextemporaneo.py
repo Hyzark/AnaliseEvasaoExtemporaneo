@@ -38,6 +38,7 @@ JANELA_DIAS = 30  # Regra de negócio: pagamento extemporâneo deve ter ≥ 30 d
 def _linha_valida(row) -> bool:
     """
     Replica a lógica de linha_valida de cruzar_dados.
+<<<<<<< HEAD
     O último status ('válido' ou 'inválido') encontrado na linha vence.
     """
     ultimo_status = None
@@ -64,6 +65,16 @@ def _linha_valida(row) -> bool:
             ultimo_status = True
 
     return ultimo_status is True
+=======
+    Retorna True se qualquer célula da linha contiver 'válido'
+    (sem 'inválido').
+    """
+    for v in row:
+        texto = str(v).strip().lower()
+        if "válido" in texto and "inválido" not in texto:
+            return True
+    return False
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
 
 
 def _aplicar_validacao(df: pd.DataFrame) -> pd.DataFrame:
@@ -358,34 +369,63 @@ def _cruzar_extemporaneo_completo(
 # ═══════════════════════════════════════════════════════════════════
 
 def _gerar_excel_extemporaneo(
+<<<<<<< HEAD
 df_der: pd.DataFrame,
+=======
+    df_der: pd.DataFrame,
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
     df_tam_proc: pd.DataFrame,
     df_ausentes: pd.DataFrame,
     df_resultado: pd.DataFrame,
     df_duplicatas: pd.DataFrame,
+<<<<<<< HEAD
     df_proximas: pd.DataFrame,
+=======
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
 ) -> bytes:
 
     output = io.BytesIO()
 
     with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+<<<<<<< HEAD
         df_ausentes.to_excel(writer, sheet_name="Ausentes", index=False)
         df_resultado.to_excel(writer, sheet_name="Resultado", index=False)
         df_tam_proc.to_excel(writer, sheet_name="Concessionária Processada", index=False)
         df_der.to_excel(writer, sheet_name="DER", index=False)
 
+=======
+        # Aba 1
+        df_ausentes.to_excel(writer, sheet_name="Ausentes", index=False)
+
+        # Aba 2
+        df_resultado.to_excel(writer, sheet_name="Resultado", index=False)
+
+        # Aba 3
+        df_tam_proc.to_excel(writer, sheet_name="Concessionária Processada", index=False)
+        #aba 4
+        df_der.to_excel(writer, sheet_name="DER", index=False)
+
+        # Aba 5 — somente passagens válidas
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
         df_ok = df_tam_proc[df_tam_proc["Conclusão"] == "OK"]
         resumo_mes = calcular_passagens_por_mes(df_ok, "Data")
         resumo_mes.to_excel(writer, sheet_name="Passagens OK por Mês", index=False)
 
+<<<<<<< HEAD
+=======
+        # Aba 5
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
         if df_duplicatas.empty:
             pd.DataFrame({"Mensagem": ["Nenhuma duplicata encontrada"]}) \
                 .to_excel(writer, sheet_name="Duplicadas", index=False)
         else:
             df_duplicatas.to_excel(writer, sheet_name="Duplicadas", index=False)
+<<<<<<< HEAD
             
         # 🔥 NOVA ABA INSERIDA AQUI
         df_proximas.to_excel(writer, sheet_name="Passagens Próximas", index=False)
+=======
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
 
     output.seek(0)
     return output.getvalue()
@@ -447,10 +487,13 @@ def _renderizar_cruzar_informacoes() -> None:
         progress.progress(30, text="📂 Lendo planilha da Concessionária...")
         df_tam = _ler_tamoios(file_concessao)
 
+<<<<<<< HEAD
         progress.progress(40, text="🔍 Verificando passagens próximas...")
         from app_evasao import detectar_passagens_proximas
         df_proximas = detectar_passagens_proximas(df_tam)
 
+=======
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
         progress.progress(50, text="🔗 Cruzando dados e aplicando validação temporal...")
         df_tam_proc, df_ausentes, df_resultado, df_duplicatas = _cruzar_extemporaneo_completo(
             df_der, df_tam
@@ -458,7 +501,11 @@ def _renderizar_cruzar_informacoes() -> None:
 
         progress.progress(75, text="💾 Gerando arquivo de saída...")
         excel_bytes = _gerar_excel_extemporaneo(
+<<<<<<< HEAD
             df_der, df_tam_proc, df_ausentes, df_resultado, df_duplicatas, df_proximas
+=======
+            df_der, df_tam_proc, df_ausentes, df_resultado, df_duplicatas
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
         )
         progress.progress(100, text="✅ Concluído!")
 
@@ -512,15 +559,22 @@ def _renderizar_cruzar_informacoes() -> None:
     )
 
     # ── 2. Renderização das Abas ────────────────────────────────
+<<<<<<< HEAD
     qtd_proximas_ext = len(df_proximas) if "Placa" in df_proximas.columns else 0
 
     # Adicione prev_prox na criação das abas
     prev_conc, prev_aus, prev_res, prev_dup, prev_prox = st.tabs([
+=======
+    prev_conc, prev_aus, prev_res, prev_dup = st.tabs([
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
         f"Concessionária Processada ({total_conc_proc:,})",
         f"Ausentes ({total_ausent:,})",
         "Resultado",
         f"Duplicadas ({n_dup:,})",
+<<<<<<< HEAD
         f"Auditoria: Próximas ({qtd_proximas_ext})", # 🔥 NOVA ABA
+=======
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
     ])
 
     with prev_conc:
@@ -542,9 +596,12 @@ def _renderizar_cruzar_informacoes() -> None:
         else:
             st.caption(f"Mostrando até {MAX_PREVIEW} de {n_dup:,} linhas")
             st.dataframe(df_duplicatas.head(MAX_PREVIEW), use_container_width=True, height=340)
+<<<<<<< HEAD
             
     with prev_prox:
         st.dataframe(df_proximas.head(MAX_PREVIEW), use_container_width=True, hide_index=True)
+=======
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
 
     # ── Download ─────────────────────────────────────────────────
     st.markdown(

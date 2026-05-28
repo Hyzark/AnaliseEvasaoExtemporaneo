@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 Crie um arquivo executável
 ```powershell
 python -m PyInstaller --noconfirm --onefile --collect-all streamlit --collect-all pandas --add-data "app_evasao.py;." --add-data "appextemporaneo.py;." run_app.py```
@@ -21,3 +22,6 @@ Rodar aplicação
 ```powershell
 streamlit run app_evasao.py
 ```
+=======
+# AnaliseEvasaoExtemporaneo
+>>>>>>> 06a62c43bbcb901c5e7e96daff4cdd8d16c63dc1
